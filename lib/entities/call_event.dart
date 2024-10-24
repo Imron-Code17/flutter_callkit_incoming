@@ -12,7 +12,7 @@ enum Event {
   actionDidUpdateDevicePushTokenVoip,
   actionCallIncoming,
   actionCallStart,
-  actionCallAccept,
+  actionCallFollowUp,
   actionCallDecline,
   actionCallEnded,
   actionCallTimeout,
@@ -35,8 +35,8 @@ extension EventX on Event {
         return 'com.hiennv.flutter_callkit_incoming.ACTION_CALL_INCOMING';
       case Event.actionCallStart:
         return 'com.hiennv.flutter_callkit_incoming.ACTION_CALL_START';
-      case Event.actionCallAccept:
-        return 'com.hiennv.flutter_callkit_incoming.ACTION_CALL_ACCEPT';
+      case Event.actionCallFollowUp:
+        return 'com.hiennv.flutter_callkit_incoming.ACTION_CALL_FOLLOW_UP';
       case Event.actionCallDecline:
         return 'com.hiennv.flutter_callkit_incoming.ACTION_CALL_DECLINE';
       case Event.actionCallEnded:

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
@@ -7,6 +8,15 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
+        
+        <ImageView
+            android:id="@+id/ivAvatar"
+            android:layout_width="@dimen/base_margin_x4"
+            android:layout_height="@dimen/base_margin_x4"
+            android:scaleType="centerCrop"
+            android:visibility="visible"
+            android:src="@drawable/ic_default_avatar"
+            android:layout_marginRight="10dp"/>
 
         <LinearLayout
             android:layout_width="0dp"
@@ -15,30 +25,39 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/tvNameCaller"
+                android:id="@+id/tvTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/TextAppearance.Compat.Notification.Title"
-                android:textSize="@dimen/size_text_action" />
+                android:textSize="12sp"
+                android:fontFamily="@font/dm_sans"
+                android:layout_marginBottom="4dp"/>
 
+            <TextView
+                android:id="@+id/tvSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Compat.Notification.Title"
+                android:textSize="12sp"
+                android:fontFamily="@font/dm_sans"
+                android:textStyle="bold"/>
 
             <TextView
                 android:id="@+id/tvNumber"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.Compat.Notification.Line2"
-                android:textSize="@dimen/size_text_action" />
-
+                android:textAppearance="@style/TextAppearance.Compat.Notification.Line2" />
         </LinearLayout>
 
-
         <ImageView
-            android:id="@+id/ivAvatar"
-            android:layout_width="@dimen/base_margin_x4"
-            android:layout_height="@dimen/base_margin_x4"
-            android:scaleType="centerCrop"
-            android:visibility="visible"
-            android:src="@drawable/ic_default_avatar"/>
+            android:id="@+id/ivLaterCall"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="end"
+            android:background="@drawable/bg_later_fcm"
+            android:padding="4dp"
+            android:src="@drawable/ic_later"
+            tools:ignore="ContentDescription" />
     </LinearLayout>
 
     <LinearLayout
@@ -47,13 +66,12 @@
         android:layout_marginTop="@dimen/base_margin"
         android:orientation="horizontal">
 
-
         <LinearLayout
             android:id="@+id/llCallback"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/rounded_button_accept"
+            android:background="@drawable/rounded_button_follow_up"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
@@ -67,13 +85,8 @@
                 android:gravity="center"
                 android:text="@string/text_call_back"
                 android:textAllCaps="false"
-                android:textColor="@android:color/white" />
-
+                android:textColor="@android:color/white"/>
         </LinearLayout>
-
     </LinearLayout>
 
-
 </LinearLayout>
-
-    <!--style="@style/Widget.Compat.NotificationActionText"-->

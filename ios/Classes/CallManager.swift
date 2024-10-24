@@ -36,7 +36,7 @@ class CallManager: NSObject {
             callUpdate.supportsGrouping = data.supportsGrouping
             callUpdate.supportsUngrouping = data.supportsUngrouping
             callUpdate.hasVideo = data.type > 0 ? true : false
-            callUpdate.localizedCallerName = data.nameCaller
+            callUpdate.localizedCallerName = data.subtitle
             self.sharedProvider?.reportCall(with: uuid!, updated: callUpdate)
         })
     }

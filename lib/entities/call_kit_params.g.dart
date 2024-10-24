@@ -9,15 +9,19 @@ part of 'call_kit_params.dart';
 CallKitParams _$CallKitParamsFromJson(Map<String, dynamic> json) =>
     CallKitParams(
       id: json['id'] as String?,
-      nameCaller: json['nameCaller'] as String?,
+      title: json['title'] as String?,
+      subtitle: json['subtitle'] as String?,
+      senderName: json['senderName'] as String?,
+      senderMessage: json['senderMessage'] as String?,
       appName: json['appName'] as String?,
       avatar: json['avatar'] as String?,
       handle: json['handle'] as String?,
-      type: json['type'] as int?,
-      normalHandle: json['normalHandle'] as int?,
-      duration: json['duration'] as int?,
-      textAccept: json['textAccept'] as String?,
+      type: (json['type'] as num?)?.toInt(),
+      normalHandle: (json['normalHandle'] as num?)?.toInt(),
+      duration: (json['duration'] as num?)?.toInt(),
+      textFollowUp: json['textFollowUp'] as String?,
       textDecline: json['textDecline'] as String?,
+      textLater: json['textLater'] as String?,
       missedCallNotification: json['missedCallNotification'] == null
           ? null
           : NotificationParams.fromJson(
@@ -35,15 +39,19 @@ CallKitParams _$CallKitParamsFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$CallKitParamsToJson(CallKitParams instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'nameCaller': instance.nameCaller,
+      'title': instance.title,
+      'subtitle': instance.subtitle,
+      'senderName': instance.senderName,
+      'senderMessage': instance.senderMessage,
       'appName': instance.appName,
       'avatar': instance.avatar,
       'handle': instance.handle,
       'type': instance.type,
       'normalHandle': instance.normalHandle,
       'duration': instance.duration,
-      'textAccept': instance.textAccept,
+      'textFollowUp': instance.textFollowUp,
       'textDecline': instance.textDecline,
+      'textLater': instance.textLater,
       'missedCallNotification': instance.missedCallNotification?.toJson(),
       'extra': instance.extra,
       'headers': instance.headers,

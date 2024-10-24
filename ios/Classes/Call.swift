@@ -128,7 +128,7 @@ public class Call: NSObject {
 
 @objc public class Data: NSObject {
     @objc public var uuid: String
-    @objc public var nameCaller: String
+    @objc public var subtitle: String
     @objc public var appName: String
     @objc public var handle: String
     @objc public var avatar: String
@@ -155,9 +155,9 @@ public class Call: NSObject {
     @objc public var audioSessionPreferredSampleRate: Double
     @objc public var audioSessionPreferredIOBufferDuration: Double
     
-    @objc public init(id: String, nameCaller: String, handle: String, type: Int) {
+    @objc public init(id: String, subtitle: String, handle: String, type: Int) {
         self.uuid = id
-        self.nameCaller = nameCaller
+        self.subtitle = subtitle
         self.appName = "Callkit"
         self.handle = handle
         self.avatar = ""
@@ -193,7 +193,7 @@ public class Call: NSObject {
     
     public init(args: [String: Any?]) {
         self.uuid = args["id"] as? String ?? ""
-        self.nameCaller = args["nameCaller"] as? String ?? ""
+        self.subtitle = args["subtitle"] as? String ?? ""
         self.appName = args["appName"] as? String ?? "Callkit"
         self.handle = args["handle"] as? String ?? ""
         self.avatar = args["avatar"] as? String ?? ""
@@ -262,7 +262,7 @@ public class Call: NSObject {
         let map: [String : Any] = [
             "uuid": uuid,
             "id": uuid,
-            "nameCaller": nameCaller,
+            "subtitle": subtitle,
             "appName": appName,
             "handle": handle,
             "avatar": avatar,
@@ -282,14 +282,14 @@ public class Call: NSObject {
         do {
             var map: [String: Any] = [:]
 
-            map["nameCaller"] = nameCaller
+            map["subtitle"] = subtitle
             map["handle"] = handle
             
             var mapExtras = extra as? [String: Any]
             
             if (mapExtras == nil) {
                 print("error casting dictionary to [String: Any]")
-                return String(format: "{\"nameCaller\":\"%@\", \"handle\":\"%@\"}", nameCaller, handle).encryptHandle()
+                return String(format: "{\"subtitle\":\"%@\", \"handle\":\"%@\"}", subtitle, handle).encryptHandle()
             }
             
             for (key, value) in mapExtras! {
@@ -303,7 +303,7 @@ public class Call: NSObject {
             return mapString.encryptHandle()
         } catch {
             print("error encrypting call data")
-            return String(format: "{\"nameCaller\":\"%@\", \"handle\":\"%@\"}", nameCaller, handle).encryptHandle()
+            return String(format: "{\"subtitle\":\"%@\", \"handle\":\"%@\"}", subtitle, handle).encryptHandle()
         }
        
     }

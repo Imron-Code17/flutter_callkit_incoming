@@ -11,15 +11,19 @@ part 'call_kit_params.g.dart';
 class CallKitParams {
   const CallKitParams({
     this.id,
-    this.nameCaller,
+    this.title,
+    this.subtitle,
+    this.senderName,
+    this.senderMessage,
     this.appName,
     this.avatar,
     this.handle,
     this.type,
     this.normalHandle,
     this.duration,
-    this.textAccept,
+    this.textFollowUp,
     this.textDecline,
+    this.textLater,
     this.missedCallNotification,
     this.extra,
     this.headers,
@@ -28,15 +32,19 @@ class CallKitParams {
   });
 
   final String? id;
-  final String? nameCaller;
+  final String? title;
+  final String? subtitle;
+  final String? senderName;
+  final String? senderMessage;
   final String? appName;
   final String? avatar;
   final String? handle;
   final int? type;
   final int? normalHandle;
   final int? duration;
-  final String? textAccept;
+  final String? textFollowUp;
   final String? textDecline;
+  final String? textLater;
   final NotificationParams? missedCallNotification;
   final Map<String, dynamic>? extra;
   final Map<String, dynamic>? headers;

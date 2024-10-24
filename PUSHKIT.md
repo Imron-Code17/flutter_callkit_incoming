@@ -75,7 +75,7 @@ Make sure when you create Bundle ID(https://developer.apple.com/account/resource
   * Using Curl
     ```
     curl -v \
-    -d '{"aps":{"alert":"Hien Nguyen Call"},"id":"44d915e1-5ff4-4bed-bf13-c423048ec97a","nameCaller":"Hien Nguyen","handle":"0123456789","isVideo":true}' \
+    -d '{"aps":{"alert":"Hien Nguyen Call"},"id":"44d915e1-5ff4-4bed-bf13-c423048ec97a","subtitle":"Hien Nguyen","handle":"0123456789","isVideo":true}' \
     -H "apns-topic: com.hiennv.testing.voip" \
     -H "apns-push-type: voip" \
     --http2 \

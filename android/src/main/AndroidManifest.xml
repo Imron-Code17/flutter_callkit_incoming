@@ -36,7 +36,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="${applicationId}.com.hiennv.flutter_callkit_incoming.ACTION_CALL_INCOMING" />
-                <action android:name="${applicationId}.com.hiennv.flutter_callkit_incoming.ACTION_CALL_ACCEPT" />
+                <action android:name="${applicationId}.com.hiennv.flutter_callkit_incoming.ACTION_CALL_FOLLOW_UP" />
                 <action android:name="${applicationId}.com.hiennv.flutter_callkit_incoming.ACTION_CALL_DECLINE" />
                 <action android:name="${applicationId}.com.hiennv.flutter_callkit_incoming.ACTION_CALL_ENDED" />
                 <action android:name="${applicationId}.com.hiennv.flutter_callkit_incoming.ACTION_CALL_TIMEOUT" />

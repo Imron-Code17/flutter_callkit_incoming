@@ -30,7 +30,16 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/tvNameCaller"
+                android:id="@+id/tvTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.Compat.Notification.Title"
+                android:textSize="@dimen/size_text_action" />
+
+            <TextView
+                android:id="@+id/tvSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:singleLine="true"
@@ -65,7 +74,7 @@
                 android:id="@+id/llDecline"
                 android:layout_width="@dimen/base_margin_x4"
                 android:layout_height="@dimen/base_margin_x4"
-                android:background="@drawable/rounded_button_decline"
+                android:background="@drawable/rounded_button_decliner"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
@@ -101,10 +110,10 @@
                 android:layout_height="match_parent" />
 
             <LinearLayout
-                android:id="@+id/llAccept"
+                android:id="@+id/llFollowUp"
                 android:layout_width="@dimen/base_margin_x4"
                 android:layout_height="@dimen/base_margin_x4"
-                android:background="@drawable/rounded_button_accept"
+                android:background="@drawable/rounded_button_follow_up"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
@@ -115,20 +124,20 @@
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="@dimen/base_margin_half"
                     android:layout_marginRight="@dimen/base_margin_half"
-                    android:src="@drawable/ic_accept"
+                    android:src="@drawable/ic_follow_up"
                     android:tint="@android:color/white"
                     app:tint="@android:color/white"
                     tools:ignore="UseAppTint" />
 
                 <TextView
-                    android:id="@+id/tvAccept"
+                    android:id="@+id/tvFollowUp"
                     style="@style/Widget.Compat.NotificationActionText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="@dimen/base_margin_half"
                     android:layout_marginRight="@dimen/base_margin_half"
                     android:gravity="center"
-                    android:text="@string/text_accept"
+                    android:text="@string/text_follow_up"
                     android:visibility="gone"
                     android:textAllCaps="false"
                     android:textColor="@color/action_text" />

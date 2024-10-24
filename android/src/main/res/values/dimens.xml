@@ -14,11 +14,12 @@
     <dimen name="base_margin_x6">60dp</dimen>
 
     <dimen name="base_margin_revert_x5">-50dp</dimen>
-    <dimen name="size_avatar">120dp</dimen>
+    <dimen name="size_avatar">150dp</dimen>
     <dimen name="size_button">60dp</dimen>
+    <dimen name="size_button_x1_5">90dp</dimen>
     <dimen name="size_button_x2">120dp</dimen>
     <dimen name="size_button_x2_5">150dp</dimen>
 
-    <dimen name="size_text_name">24sp</dimen>
+    <dimen name="size_text_name">18sp</dimen>
     <dimen name="size_text_action">14sp</dimen>
 </resources>

@@ -22,7 +22,7 @@ class FlutterCallkitIncoming {
   /// FlutterCallkitIncoming.onEvent.listen((event) {
   /// Event.ACTION_CALL_INCOMING - Received an incoming call
   /// Event.ACTION_CALL_START - Started an outgoing call
-  /// Event.ACTION_CALL_ACCEPT - Accepted an incoming call
+  /// Event.ACTION_CALL_FOLLOW_UP - Accepted an incoming call
   /// Event.ACTION_CALL_DECLINE - Declined an incoming call
   /// Event.ACTION_CALL_ENDED - Ended an incoming/outgoing call
   /// Event.ACTION_CALL_TIMEOUT - Missed an incoming call

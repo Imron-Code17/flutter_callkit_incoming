@@ -68,19 +68,25 @@ class CallkitIncomingActivity : Activity() {
     private var endedCallkitIncomingBroadcastReceiver = EndedCallkitIncomingBroadcastReceiver()
 
     private lateinit var ivBackground: ImageView
-    private lateinit var llBackgroundAnimation: RippleRelativeLayout
 
-    private lateinit var tvNameCaller: TextView
+
+    private lateinit var tvTitle: TextView
+    private lateinit var tvSubtitle: TextView
+    private lateinit var tvSenderName: TextView
+    private lateinit var tvSenderMessage: TextView
     private lateinit var tvNumber: TextView
     private lateinit var ivLogo: ImageView
     private lateinit var ivAvatar: CircleImageView
 
     private lateinit var llAction: LinearLayout
-    private lateinit var ivAcceptCall: ImageView
-    private lateinit var tvAccept: TextView
+    private lateinit var ivFollowUpCall: ImageView
+    private lateinit var tvFollowUp: TextView
 
     private lateinit var ivDeclineCall: ImageView
     private lateinit var tvDecline: TextView
+
+    private lateinit var ivLaterCall: ImageView
+    private lateinit var tvLater: TextView
 
     @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -174,13 +180,21 @@ class CallkitIncomingActivity : Activity() {
         }
 
 		val textColor = data?.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_COLOR, "#ffffff")
+		val textColorBlack = data?.getString(CallkitConstants.EXTRA_CALLKIT_SENDER_TEXT_COLOR, "#000000")
+
         val isShowCallID = data?.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_SHOW_CALL_ID, false)
-        tvNameCaller.text = data?.getString(CallkitConstants.EXTRA_CALLKIT_NAME_CALLER, "")
+        tvTitle.text = data?.getString(CallkitConstants.EXTRA_CALLKIT_TITLE, "")
+        tvSubtitle.text = data?.getString(CallkitConstants.EXTRA_CALLKIT_SUBTITLE, "")
+        tvSenderName.text = data?.getString(CallkitConstants.EXTRA_CALLKIT_SENDERNAME, "")
+        tvSenderMessage.text = data?.getString(CallkitConstants.EXTRA_CALLKIT_SENDERMESSAGE, "")
         tvNumber.text = data?.getString(CallkitConstants.EXTRA_CALLKIT_HANDLE, "")
         tvNumber.visibility = if (isShowCallID == true) View.VISIBLE else View.INVISIBLE
 
 		try {
-			tvNameCaller.setTextColor(Color.parseColor(textColor))
+			tvTitle.setTextColor(Color.parseColor(textColor))
+			tvSubtitle.setTextColor(Color.parseColor(textColor))
+			tvSenderName.setTextColor(Color.parseColor(textColorBlack))
+			tvSenderMessage.setTextColor(Color.parseColor(textColorBlack))
 			tvNumber.setTextColor(Color.parseColor(textColor))
 		} catch (error: Exception) {
 		}
@@ -201,20 +215,20 @@ class CallkitIncomingActivity : Activity() {
 
         val callType = data?.getInt(CallkitConstants.EXTRA_CALLKIT_TYPE, 0) ?: 0
         if (callType > 0) {
-            ivAcceptCall.setImageResource(R.drawable.ic_video)
+            ivFollowUpCall.setImageResource(R.drawable.ic_video)
         }
         val duration = data?.getLong(CallkitConstants.EXTRA_CALLKIT_DURATION, 0L) ?: 0L
         wakeLockRequest(duration)
 
         finishTimeout(data, duration)
 
-        val textAccept = data?.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_ACCEPT, "")
-        tvAccept.text = if (TextUtils.isEmpty(textAccept)) getString(R.string.text_accept) else textAccept
+        val textFollowUp = data?.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_FOLLOW_UP, "")
+        tvFollowUp.text = if (TextUtils.isEmpty(textFollowUp)) getString(R.string.text_follow_up) else textFollowUp
         val textDecline = data?.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_DECLINE, "")
         tvDecline.text = if (TextUtils.isEmpty(textDecline)) getString(R.string.text_decline) else textDecline
 
 		try {
-			tvAccept.setTextColor(Color.parseColor(textColor))
+			tvFollowUp.setTextColor(Color.parseColor(textColor))
 			tvDecline.setTextColor(Color.parseColor(textColor))
 		} catch (error: Exception) {
 		}
@@ -232,8 +246,8 @@ class CallkitIncomingActivity : Activity() {
             val headers = data?.getSerializable(CallkitConstants.EXTRA_CALLKIT_HEADERS) as HashMap<String, Any?>
             getPicassoInstance(this@CallkitIncomingActivity, headers)
                     .load(backgroundUrl)
-                    .placeholder(R.drawable.transparent)
-                    .error(R.drawable.transparent)
+                    .placeholder(R.drawable.transparent_image)
+                    .error(R.drawable.transparent_image)
                     .into(ivBackground)
         }
     }
@@ -254,12 +268,12 @@ class CallkitIncomingActivity : Activity() {
 
     private fun initView() {
         ivBackground = findViewById(R.id.ivBackground)
-        llBackgroundAnimation = findViewById(R.id.llBackgroundAnimation)
-        llBackgroundAnimation.layoutParams.height =
-                Utils.getScreenWidth() + Utils.getStatusBarHeight(this@CallkitIncomingActivity)
-        llBackgroundAnimation.startRippleAnimation()
 
-        tvNameCaller = findViewById(R.id.tvNameCaller)
+
+        tvTitle = findViewById(R.id.tvTitle)
+        tvSubtitle = findViewById(R.id.tvSubtitle)
+        tvSenderName = findViewById(R.id.tvSenderName)
+        tvSenderMessage = findViewById(R.id.tvSenderMessage)
         tvNumber = findViewById(R.id.tvNumber)
         ivLogo = findViewById(R.id.ivLogo)
         ivAvatar = findViewById(R.id.ivAvatar)
@@ -270,30 +284,35 @@ class CallkitIncomingActivity : Activity() {
         params.setMargins(0, 0, 0, Utils.getNavigationBarHeight(this@CallkitIncomingActivity))
         llAction.layoutParams = params
 
-        ivAcceptCall = findViewById(R.id.ivAcceptCall)
-        tvAccept = findViewById(R.id.tvAccept)
+        ivFollowUpCall = findViewById(R.id.ivFollowUpCall)
+        tvFollowUp = findViewById(R.id.tvFollowUp)
         ivDeclineCall = findViewById(R.id.ivDeclineCall)
         tvDecline = findViewById(R.id.tvDecline)
-        animateAcceptCall()
+        ivLaterCall = findViewById(R.id.ivLaterCall)
+        tvLater = findViewById(R.id.tvLater)
 
-        ivAcceptCall.setOnClickListener {
+
+        ivFollowUpCall.setOnClickListener {
             onAcceptClick()
         }
         ivDeclineCall.setOnClickListener {
             onDeclineClick()
+        }
+         ivLaterCall.setOnClickListener {
+            onLaterClick()
         }
     }
 
     private fun animateAcceptCall() {
         val shakeAnimation =
                 AnimationUtils.loadAnimation(this@CallkitIncomingActivity, R.anim.shake_anim)
-        ivAcceptCall.animation = shakeAnimation
+        ivFollowUpCall.animation = shakeAnimation
     }
 
 
     private fun onAcceptClick() {
         val data = intent.extras?.getBundle(CallkitConstants.EXTRA_CALLKIT_INCOMING_DATA)
-        val acceptIntent = TransparentActivity.getIntent(this, CallkitConstants.ACTION_CALL_ACCEPT, data)
+        val acceptIntent = TransparentActivity.getIntent(this, CallkitConstants.ACTION_CALL_FOLLOW_UP, data)
         startActivity(acceptIntent)
 
         dismissKeyguard()
@@ -310,6 +329,13 @@ class CallkitIncomingActivity : Activity() {
     private fun onDeclineClick() {
         val data = intent.extras?.getBundle(CallkitConstants.EXTRA_CALLKIT_INCOMING_DATA)
         val intent = CallkitIncomingBroadcastReceiver.getIntentDecline(this@CallkitIncomingActivity, data)
+        sendBroadcast(intent)
+        finishTask()
+    }
+
+    private fun onLaterClick() {
+        val data = intent.extras?.getBundle(CallkitConstants.EXTRA_CALLKIT_INCOMING_DATA)
+        val intent = CallkitIncomingBroadcastReceiver.getIntentLater(this@CallkitIncomingActivity, data)
         sendBroadcast(intent)
         finishTask()
     }

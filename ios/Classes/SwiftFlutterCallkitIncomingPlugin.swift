@@ -10,7 +10,7 @@ public class SwiftFlutterCallkitIncomingPlugin: NSObject, FlutterPlugin, CXProvi
     
     static let ACTION_CALL_INCOMING = "com.hiennv.flutter_callkit_incoming.ACTION_CALL_INCOMING"
     static let ACTION_CALL_START = "com.hiennv.flutter_callkit_incoming.ACTION_CALL_START"
-    static let ACTION_CALL_ACCEPT = "com.hiennv.flutter_callkit_incoming.ACTION_CALL_ACCEPT"
+    static let ACTION_CALL_FOLLOW_UP = "com.hiennv.flutter_callkit_incoming.ACTION_CALL_FOLLOW_UP"
     static let ACTION_CALL_DECLINE = "com.hiennv.flutter_callkit_incoming.ACTION_CALL_DECLINE"
     static let ACTION_CALL_ENDED = "com.hiennv.flutter_callkit_incoming.ACTION_CALL_ENDED"
     static let ACTION_CALL_TIMEOUT = "com.hiennv.flutter_callkit_incoming.ACTION_CALL_TIMEOUT"
@@ -250,7 +250,7 @@ public class SwiftFlutterCallkitIncomingPlugin: NSObject, FlutterPlugin, CXProvi
         callUpdate.supportsGrouping = data.supportsGrouping
         callUpdate.supportsUngrouping = data.supportsUngrouping
         callUpdate.hasVideo = data.type > 0 ? true : false
-        callUpdate.localizedCallerName = data.nameCaller
+        callUpdate.localizedCallerName = data.subtitle
         
         initCallkitProvider(data)
         
@@ -529,7 +529,7 @@ public class SwiftFlutterCallkitIncomingPlugin: NSObject, FlutterPlugin, CXProvi
             self?.sharedProvider?.reportOutgoingCall(with: call.uuid, connectedAt: call.connectedData)
         }
         self.answerCall = call
-        sendEvent(SwiftFlutterCallkitIncomingPlugin.ACTION_CALL_ACCEPT, self.data?.toJSON())
+        sendEvent(SwiftFlutterCallkitIncomingPlugin.ACTION_CALL_FOLLOW_UP, self.data?.toJSON())
         if let appDelegate = UIApplication.shared.delegate as? CallkitIncomingAppDelegate {
             appDelegate.onAccept(call, action)
         }else {

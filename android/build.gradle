@@ -2,16 +2,13 @@ group 'com.example.flutter_callkit_incoming'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.8.0'
+    ext.kotlin_version = '1.8.22'
     repositories {
         google()
         jcenter()
     }
 
     dependencies {
-        //classpath 'com.android.tools.build:gradle:4.1.0'
-        //classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        
         classpath 'com.android.tools.build:gradle:7.1.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
@@ -28,20 +25,29 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdk 34
+    compileSdk 34  // Sesuaikan dengan project utama (flutter.compileSdkVersion)
 
     if (project.android.hasProperty("namespace")) {
         namespace "com.hiennv.flutter_callkit_incoming"
     }
-    
+
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
     defaultConfig {
-        minSdk 16
-        targetSdk 34
+        minSdk 23  // Sesuaikan dengan flutter.minSdkVersion dari project utama
+        targetSdk 34  // Sesuaikan dengan flutter.targetSdkVersion dari project utama
 
         consumerProguardFiles 'consumer-rules.pro'
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
     }
 }
 

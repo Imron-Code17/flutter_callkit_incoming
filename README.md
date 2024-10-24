@@ -88,12 +88,12 @@ Our top sponsors are shown below!
       this._currentUuid = _uuid.v4();
       CallKitParams callKitParams = CallKitParams(
         id: _currentUuid,
-        nameCaller: 'Hien Nguyen',
+        subtitle: 'Hien Nguyen',
         appName: 'Callkit',
         avatar: 'https://i.pravatar.cc/100',
         handle: '0123456789',
         type: 0,
-        textAccept: 'Accept',
+        textFollowUp: 'Accept',
         textDecline: 'Decline',
         missedCallNotification: NotificationParams(
             showNotification: true,
@@ -158,7 +158,7 @@ Our top sponsors are shown below!
       this._currentUuid = _uuid.v4();
       CallKitParams params = CallKitParams(
         id: _currentUuid,
-        nameCaller: 'Hien Nguyen',
+        subtitle: 'Hien Nguyen',
         handle: '0123456789',
         type: 1,
         textMissedCall: 'Missed call',
@@ -180,7 +180,7 @@ Our top sponsors are shown below!
       this._currentUuid = _uuid.v4();
       CallKitParams params = CallKitParams(
         id: this._currentUuid,
-        nameCaller: 'Hien Nguyen',
+        subtitle: 'Hien Nguyen',
         handle: '0123456789',
         type: 1,
         extra: <String, dynamic>{'userId': '1a2b3c4d'},
@@ -255,7 +255,7 @@ Our top sponsors are shown below!
             // TODO: started an outgoing call
             // TODO: show screen calling in Flutter
             break;
-          case Event.actionCallAccept:
+          case Event.actionCallFollowUp:
             // TODO: accepted an incoming call
             // TODO: show screen calling in Flutter
             break;
@@ -301,7 +301,7 @@ Our top sponsors are shown below!
       //Swift iOS
       var info = [String: Any?]()
       info["id"] = "44d915e1-5ff4-4bed-bf13-c423048ec97a"
-      info["nameCaller"] = "Hien Nguyen"
+      info["subtitle"] = "Hien Nguyen"
       info["handle"] = "0123456789"
       info["type"] = 1
       //... set more data
@@ -321,8 +321,8 @@ Our top sponsors are shown below!
 
     ```swift
       //OR
-      let data = flutter_callkit_incoming.Data(id: "44d915e1-5ff4-4bed-bf13-c423048ec97a", nameCaller: "Hien Nguyen", handle: "0123456789", type: 0)
-      data.nameCaller = "Johnny"
+      let data = flutter_callkit_incoming.Data(id: "44d915e1-5ff4-4bed-bf13-c423048ec97a", subtitle: "Hien Nguyen", handle: "0123456789", type: 0)
+      data.subtitle = "Johnny"
       data.extra = ["user": "abc@123", "platform": "ios"]
       //... set more data
       SwiftFlutterCallkitIncomingPlugin.sharedInstance?.showCallkitIncoming(data, fromPushKit: true)
@@ -338,8 +338,8 @@ Our top sponsors are shown below!
       #import "flutter_callkit_incoming-Swift.h"
       #endif
 
-      Data * data = [[Data alloc]initWithId:@"44d915e1-5ff4-4bed-bf13-c423048ec97a" nameCaller:@"Hien Nguyen" handle:@"0123456789" type:1];
-      [data setNameCaller:@"Johnny"];
+      Data * data = [[Data alloc]initWithId:@"44d915e1-5ff4-4bed-bf13-c423048ec97a" subtitle:@"Hien Nguyen" handle:@"0123456789" type:1];
+      [data setsubtitle:@"Johnny"];
       [data setExtra:@{ @"userId" : @"HelloXXXX", @"key2" : @"value2"}];
       //... set more data
       [SwiftFlutterCallkitIncomingPlugin.sharedInstance showCallkitIncoming:data fromPushKit:YES];
@@ -471,13 +471,13 @@ Our top sponsors are shown below!
     | Prop            | Description                                                             | Default     |
     | --------------- | ----------------------------------------------------------------------- | ----------- |
     |  **`id`**       | UUID identifier for each call. UUID should be unique for every call and when the call is  ended, the same UUID for that call to be used. suggest using <a href='https://pub.dev/packages/uuid'>uuid.</a> ACCEPT ONLY UUID    | Required    |
-    | **`nameCaller`**| Caller's name.                                                          | _None_      |
+    | **`subtitle`**| Caller's name.                                                          | _None_      |
     | **`appName`**   | App's name. using for display inside Callkit(iOS).                      |   App Name, `Deprecated for iOS > 14, default using App name`  |
     | **`avatar`**    | Avatar's URL used for display for Android. `/android/src/main/res/drawable-xxxhdpi/ic_default_avatar.png`                             |    _None_   |
     | **`handle`**    | Phone number/Email/Any.                                                 |    _None_   |
     |   **`type`**    |  0 - Audio Call, 1 - Video Call                                         |     `0`     |
     | **`duration`**  | Incoming call/Outgoing call display time (second). If the time is over, the call will be missed.                                                                                     |    `30000`  |
-   | **`textAccept`**  | Text `Accept` used in Android                                            |    `Accept`  |
+   | **`textFollowUp`**  | Text `Accept` used in Android                                            |    `Accept`  |
    | **`textDecline`**  | Text `Decline` used in Android                                           |    `Decline`  |
     |   **`extra`**   | Any data added to the event when received.                              |     `{}`    |
     |   **`headers`** | Any data for custom header avatar/background image.                     |     `{}`    |
