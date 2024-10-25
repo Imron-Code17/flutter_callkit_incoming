@@ -38,9 +38,9 @@ class _MyHomePageState extends State<MyHomePage> {
         id: uuid,
         title: 'Incoming Lead',
         subtitle: 'Verde Two',
-        // senderName: 'Budi Gunawan',
-        // senderMessage:
-        //     'Halo saya tertarik dengan Apartment tipe studio verde two lorem ipsum dolor sit amet lorem',
+        senderName: 'Budi Gunawan',
+        senderMessage:
+            'Halo saya tertarik dengan Apartment tipe studio verde two lorem ipsum dolor sit amet lorem',
         appName: 'Program',
         avatar: 'https://i.pravatar.cc/100',
         handle: '0123456789',
@@ -60,7 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
             isCustomNotification: true,
             isShowLogo: false,
             ringtonePath: 'system_ringtone_default',
-            backgroundColor: '#ff232323',
+            backgroundColor: '#232323',
             backgroundUrl: 'assets/test.png',
             actionColor: '#4CAF50',
             textColor: '#ffffff',

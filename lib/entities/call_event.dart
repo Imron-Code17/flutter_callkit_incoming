@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 /// Object CallEvent.
 class CallEvent {
   Event event;
@@ -14,6 +16,7 @@ enum Event {
   actionCallStart,
   actionCallFollowUp,
   actionCallDecline,
+  actionCallLater,
   actionCallEnded,
   actionCallTimeout,
   actionCallCallback,
@@ -28,6 +31,7 @@ enum Event {
 /// Using extension for backward compatibility Dart SDK 2.17.0 and lower
 extension EventX on Event {
   String get name {
+    log("#>> $this");
     switch (this) {
       case Event.actionDidUpdateDevicePushTokenVoip:
         return 'com.hiennv.flutter_callkit_incoming.DID_UPDATE_DEVICE_PUSH_TOKEN_VOIP';
@@ -39,6 +43,8 @@ extension EventX on Event {
         return 'com.hiennv.flutter_callkit_incoming.ACTION_CALL_FOLLOW_UP';
       case Event.actionCallDecline:
         return 'com.hiennv.flutter_callkit_incoming.ACTION_CALL_DECLINE';
+      case Event.actionCallLater:
+        return 'com.hiennv.flutter_callkit_incoming.ACTION_CALL_LATER';
       case Event.actionCallEnded:
         return 'com.hiennv.flutter_callkit_incoming.ACTION_CALL_ENDED';
       case Event.actionCallTimeout:

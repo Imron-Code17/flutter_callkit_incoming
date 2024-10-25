@@ -38,6 +38,7 @@
                 <action android:name="${applicationId}.com.hiennv.flutter_callkit_incoming.ACTION_CALL_INCOMING" />
                 <action android:name="${applicationId}.com.hiennv.flutter_callkit_incoming.ACTION_CALL_FOLLOW_UP" />
                 <action android:name="${applicationId}.com.hiennv.flutter_callkit_incoming.ACTION_CALL_DECLINE" />
+                <action android:name="${applicationId}.com.hiennv.flutter_callkit_incoming.ACTION_CALL_LATER" />
                 <action android:name="${applicationId}.com.hiennv.flutter_callkit_incoming.ACTION_CALL_ENDED" />
                 <action android:name="${applicationId}.com.hiennv.flutter_callkit_incoming.ACTION_CALL_TIMEOUT" />
             </intent-filter>

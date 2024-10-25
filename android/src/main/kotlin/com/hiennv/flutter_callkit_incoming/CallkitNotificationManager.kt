@@ -280,10 +280,14 @@ class CallkitNotificationManager(private val context: Context) {
             R.id.tvFollowUp,
             if (TextUtils.isEmpty(textFollowUp)) context.getString(R.string.text_follow_up) else textFollowUp
         )
+        remoteViews.setOnClickPendingIntent(
+            R.id.llLater,
+            getAcceptPendingIntent(notificationId, data)
+        )
         val textLater = data.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_LATER, "")
         remoteViews.setTextViewText(
             R.id.tvLater,
-            if (TextUtils.isEmpty(textLater)) context.getString(R.string.text_follow_up) else textLater
+            if (TextUtils.isEmpty(textLater)) context.getString(R.string.text_later) else textLater
         )
         val avatarUrl = data.getString(CallkitConstants.EXTRA_CALLKIT_AVATAR, "")
         if (avatarUrl != null && avatarUrl.isNotEmpty()) {

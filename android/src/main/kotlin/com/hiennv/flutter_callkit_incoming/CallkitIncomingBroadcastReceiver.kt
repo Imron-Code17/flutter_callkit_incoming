@@ -114,6 +114,7 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
             }
 
             "${context.packageName}.${CallkitConstants.ACTION_CALL_FOLLOW_UP}" -> {
+                Log.d("CallActions", "#>> Follow up call clicked")
                 try {
                     sendEventFlutter(CallkitConstants.ACTION_CALL_FOLLOW_UP, data)
                     context.stopService(Intent(context, CallkitSoundPlayerService::class.java))
@@ -125,6 +126,7 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
             }
 
             "${context.packageName}.${CallkitConstants.ACTION_CALL_DECLINE}" -> {
+                Log.d("CallActions", "#>> Decline call clicked")
                 try {
                     sendEventFlutter(CallkitConstants.ACTION_CALL_DECLINE, data)
                     context.stopService(Intent(context, CallkitSoundPlayerService::class.java))
@@ -136,6 +138,7 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
             }
 
             "${context.packageName}.${CallkitConstants.ACTION_CALL_LATER}" -> {
+                Log.d("CallActions", "#>> Later call clicked")
                 try {
                     sendEventFlutter(CallkitConstants.ACTION_CALL_LATER, data)
                     context.stopService(Intent(context, CallkitSoundPlayerService::class.java))

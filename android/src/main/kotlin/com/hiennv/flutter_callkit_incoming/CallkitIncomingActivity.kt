@@ -267,6 +267,7 @@ class CallkitIncomingActivity : Activity() {
     }
 
     private fun initView() {
+        val data = intent.extras?.getBundle(CallkitConstants.EXTRA_CALLKIT_INCOMING_DATA)
         ivBackground = findViewById(R.id.ivBackground)
 
 
@@ -291,14 +292,30 @@ class CallkitIncomingActivity : Activity() {
         ivLaterCall = findViewById(R.id.ivLaterCall)
         tvLater = findViewById(R.id.tvLater)
 
+       
+        val textSenderName = data?.getString(CallkitConstants.EXTRA_CALLKIT_SENDERNAME, "")
+        val textSenderMessage = data?.getString(CallkitConstants.EXTRA_CALLKIT_SENDERMESSAGE, "")
 
+
+        if (TextUtils.isEmpty(textSenderName) || TextUtils.isEmpty(textSenderMessage)) {
+            val layoutParent = findViewById<LinearLayout>(R.id.layoutParent)
+            layoutParent.visibility = View.INVISIBLE
+        } else {
+            val layoutParent = findViewById<LinearLayout>(R.id.layoutParent)
+            layoutParent.visibility = View.VISIBLE
+        }
+
+        
         ivFollowUpCall.setOnClickListener {
+            Log.d("CallActions", "#>> Follow up call clicked")
             onAcceptClick()
         }
         ivDeclineCall.setOnClickListener {
+            Log.d("CallActions", "#>> Decline call clicked")
             onDeclineClick()
         }
-         ivLaterCall.setOnClickListener {
+        ivLaterCall.setOnClickListener {
+            Log.d("CallActions", "#>> Later call clicked")
             onLaterClick()
         }
     }
