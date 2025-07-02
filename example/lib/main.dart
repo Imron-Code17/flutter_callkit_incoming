@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_callkit_incoming/entities/android_params.dart';
 import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
@@ -38,24 +40,20 @@ class _MyHomePageState extends State<MyHomePage> {
         id: uuid,
         title: 'Incoming Lead',
         subtitle: 'Verde Two',
-        senderName: 'Budi Gunawan',
         senderMessage:
-            'Halo saya tertarik dengan Apartment tipe studio verde two lorem ipsum dolor sit amet lorem',
-        appName: 'Program',
-        avatar: 'https://i.pravatar.cc/100',
-        handle: '0123456789',
-        type: 0,
+            'Segera konfirmasi. Leads akan dialihkan secara otomatis dalam 30 detik',
         duration: 30000,
         textFollowUp: 'Follow Up',
         textDecline: 'Decline',
-        textLater: 'Later',
+        urlFollowUp: "http://110.239.86.17:8000/api/routing/followup",
+        urlDecline: "http://110.239.86.17:8000/api/routing/decline",
         missedCallNotification: const NotificationParams(
           showNotification: true,
           isShowCallback: false,
-          // callbackText: 'Call back',
         ),
         extra: <String, dynamic>{'userId': '1a2b3c4d'},
         headers: <String, dynamic>{'apiKey': 'Abc@123!', 'platform': 'flutter'},
+        fcmData: json.encode({'message_id': 1, 'sales_id': 13}),
         android: const AndroidParams(
             isCustomNotification: true,
             isShowLogo: false,
@@ -65,7 +63,9 @@ class _MyHomePageState extends State<MyHomePage> {
             actionColor: '#4CAF50',
             textColor: '#ffffff',
             isShowFullLockedScreen: true));
-    await FlutterCallkitIncoming.showCallkitIncoming(params);
+    Future.delayed(const Duration(seconds: 3), () async {
+      await FlutterCallkitIncoming.showCallkitIncoming(params);
+    });
   }
 
   @override

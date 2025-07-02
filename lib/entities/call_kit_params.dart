@@ -13,7 +13,7 @@ class CallKitParams {
     this.id,
     this.title,
     this.subtitle,
-    this.senderName,
+    this.timer,
     this.senderMessage,
     this.appName,
     this.avatar,
@@ -22,8 +22,10 @@ class CallKitParams {
     this.normalHandle,
     this.duration,
     this.textFollowUp,
+    this.urlFollowUp,
     this.textDecline,
-    this.textLater,
+    this.urlDecline,
+    this.fcmData,
     this.missedCallNotification,
     this.extra,
     this.headers,
@@ -34,7 +36,7 @@ class CallKitParams {
   final String? id;
   final String? title;
   final String? subtitle;
-  final String? senderName;
+  final String? timer;
   final String? senderMessage;
   final String? appName;
   final String? avatar;
@@ -43,8 +45,10 @@ class CallKitParams {
   final int? normalHandle;
   final int? duration;
   final String? textFollowUp;
+  final String? urlFollowUp;
   final String? textDecline;
-  final String? textLater;
+  final String? urlDecline;
+  final String? fcmData;
   final NotificationParams? missedCallNotification;
   final Map<String, dynamic>? extra;
   final Map<String, dynamic>? headers;

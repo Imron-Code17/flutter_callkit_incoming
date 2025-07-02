@@ -17,8 +17,8 @@ data class Data(val args: Map<String, Any?>) {
     var title: String = (args["title"] as? String) ?: ""
     @JsonProperty("subtitle")
     var subtitle: String = (args["subtitle"] as? String) ?: ""
-    @JsonProperty("senderName")
-    var senderName: String = (args["senderName"] as? String) ?: ""
+    @JsonProperty("timer")
+    var timer: String = (args["timer"] as? String) ?: ""
     @JsonProperty("senderMessage")
     var senderMessage: String = (args["senderMessage"] as? String) ?: ""
     @JsonProperty("appName")
@@ -35,8 +35,12 @@ data class Data(val args: Map<String, Any?>) {
     var textFollowUp: String = (args["textFollowUp"] as? String) ?: ""
     @JsonProperty("textDecline")
     var textDecline: String = (args["textDecline"] as? String) ?: ""
-    @JsonProperty("textLater")
-    var textLater: String = (args["textLater"] as? String) ?: ""
+    @JsonProperty("urlFollowUp")
+    var urlFollowUp: String = (args["urlFollowUp"] as? String) ?: ""
+    @JsonProperty("urlDecline")
+    var urlDecline: String = (args["urlDecline"] as? String) ?: ""
+    @JsonProperty("fcmData")
+    var fcmData: String = (args["fcmData"] as? String) ?: ""
     @JsonProperty("extra")
     var extra: HashMap<String, Any?> =
         (args["extra"] ?: HashMap<String, Any?>()) as HashMap<String, Any?>
@@ -80,8 +84,8 @@ data class Data(val args: Map<String, Any?>) {
     var missedNotificationTitle: String? = null
     @JsonProperty("missedNotificationSubtitle")
     var missedNotificationSubtitle: String? = null
-    @JsonProperty("missedNotificationSenderName")
-    var missedNotificationSenderName: String? = null
+    @JsonProperty("missedNotificationtimer")
+    var missedNotificationtimer: String? = null
     @JsonProperty("missedNotificationSenderMessage")
     var missedNotificationSenderMessage: String? = null
     @JsonProperty("missedNotificationCallbackText")
@@ -133,7 +137,7 @@ data class Data(val args: Map<String, Any?>) {
             missedNotificationId = missedNotification["id"] as? Int?
             missedNotificationTitle = missedNotification["title"] as? String?
             missedNotificationSubtitle = missedNotification["subtitle"] as? String?
-            missedNotificationSenderName = missedNotification["senderName"] as? String?
+            missedNotificationtimer = missedNotification["timer"] as? String?
             missedNotificationSenderMessage = missedNotification["senderMessage"] as? String?
             missedNotificationCount = missedNotification["count"] as? Int? ?: 1
             missedNotificationCallbackText = missedNotification["callbackText"] as? String?
@@ -143,7 +147,7 @@ data class Data(val args: Map<String, Any?>) {
         } else {
             missedNotificationTitle = args["title"] as? String ?: ""
             missedNotificationSubtitle = args["textMissedCall"] as? String ?: ""
-            missedNotificationSenderName = args["senderName"] as? String ?: ""
+            missedNotificationtimer = args["timer"] as? String ?: ""
             missedNotificationSenderMessage = args["senderMessage"] as? String ?: ""
             missedNotificationCallbackText = args["textCallback"] as? String ?: ""
             isShowCallback = android["isShowCallback"] as? Boolean ?: true
@@ -168,15 +172,17 @@ data class Data(val args: Map<String, Any?>) {
         bundle.putString(CallkitConstants.EXTRA_CALLKIT_ID, id)
         bundle.putString(CallkitConstants.EXTRA_CALLKIT_TITLE, title)
         bundle.putString(CallkitConstants.EXTRA_CALLKIT_SUBTITLE, subtitle)
-        bundle.putString(CallkitConstants.EXTRA_CALLKIT_SENDERNAME, senderName)
+        bundle.putString(CallkitConstants.EXTRA_CALLKIT_TIMER, timer)
         bundle.putString(CallkitConstants.EXTRA_CALLKIT_SENDERMESSAGE, senderMessage)
         bundle.putString(CallkitConstants.EXTRA_CALLKIT_HANDLE, handle)
         bundle.putString(CallkitConstants.EXTRA_CALLKIT_AVATAR, avatar)
         bundle.putInt(CallkitConstants.EXTRA_CALLKIT_TYPE, type)
         bundle.putLong(CallkitConstants.EXTRA_CALLKIT_DURATION, duration)
         bundle.putString(CallkitConstants.EXTRA_CALLKIT_TEXT_FOLLOW_UP, textFollowUp)
+        bundle.putString(CallkitConstants.EXTRA_CALLKIT_URL_FOLLOW_UP, urlFollowUp)
         bundle.putString(CallkitConstants.EXTRA_CALLKIT_TEXT_DECLINE, textDecline)
-        bundle.putString(CallkitConstants.EXTRA_CALLKIT_TEXT_LATER, textLater)
+        bundle.putString(CallkitConstants.EXTRA_CALLKIT_URL_DECLINE, urlDecline)
+        bundle.putString(CallkitConstants.EXTRA_CALLKIT_FCM_DATA, fcmData)
 
         missedNotificationId?.let {
             bundle.putInt(
@@ -201,8 +207,8 @@ data class Data(val args: Map<String, Any?>) {
             missedNotificationSubtitle
         )
         bundle.putString(
-            CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_SENDERNAME,
-            missedNotificationSenderName
+            CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_TIMER,
+            missedNotificationtimer
         )
         bundle.putString(
             CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_SENDERMESSAGE,
@@ -281,8 +287,8 @@ data class Data(val args: Map<String, Any?>) {
                 bundle.getString(CallkitConstants.EXTRA_CALLKIT_TITLE, "")
             data.subtitle =
                 bundle.getString(CallkitConstants.EXTRA_CALLKIT_SUBTITLE, "")
-            data.senderName =
-                bundle.getString(CallkitConstants.EXTRA_CALLKIT_SENDERNAME, "")
+            data.timer =
+                bundle.getString(CallkitConstants.EXTRA_CALLKIT_TIMER, "")
             data.senderMessage =
                 bundle.getString(CallkitConstants.EXTRA_CALLKIT_SENDERMESSAGE, "")
             data.appName =
@@ -296,10 +302,14 @@ data class Data(val args: Map<String, Any?>) {
                 bundle.getLong(CallkitConstants.EXTRA_CALLKIT_DURATION, 30000L)
             data.textFollowUp =
                 bundle.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_FOLLOW_UP, "")
+            data.urlFollowUp =
+                bundle.getString(CallkitConstants.EXTRA_CALLKIT_URL_FOLLOW_UP, "")
             data.textDecline =
                 bundle.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_DECLINE, "")
-            data.textLater =
-                bundle.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_LATER, "")
+            data.urlDecline =
+                bundle.getString(CallkitConstants.EXTRA_CALLKIT_URL_DECLINE, "")
+            data.fcmData =
+                bundle.getString(CallkitConstants.EXTRA_CALLKIT_FCM_DATA, "")
             data.isImportant =
                 bundle.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_IMPORTANT, false)
             data.isBot =
@@ -315,8 +325,8 @@ data class Data(val args: Map<String, Any?>) {
                 bundle.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_TITLE, "")
             data.missedNotificationSubtitle =
                 bundle.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_SUBTITLE, "")
-            data.missedNotificationSenderName =
-                bundle.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_SENDERNAME, "")
+            data.missedNotificationtimer =
+                bundle.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_TIMER, "")
             data.missedNotificationSenderMessage =
                 bundle.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_SENDERMESSAGE, "")
             data.isShowCallback =

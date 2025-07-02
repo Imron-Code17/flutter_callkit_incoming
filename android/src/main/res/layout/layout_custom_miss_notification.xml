@@ -48,24 +48,8 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/TextAppearance.Compat.Notification.Line2" />
         </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/llLater"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="end">
-            <ImageView
-                    android:id="@+id/ivLaterCall"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="@drawable/bg_later_fcm"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_later"
-                    tools:ignore="ContentDescription" />
-        </LinearLayout>
     </LinearLayout>
+    
 
     <LinearLayout
         android:layout_width="match_parent"

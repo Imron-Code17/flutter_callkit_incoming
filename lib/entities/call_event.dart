@@ -16,7 +16,6 @@ enum Event {
   actionCallStart,
   actionCallFollowUp,
   actionCallDecline,
-  actionCallLater,
   actionCallEnded,
   actionCallTimeout,
   actionCallCallback,
@@ -43,8 +42,6 @@ extension EventX on Event {
         return 'com.hiennv.flutter_callkit_incoming.ACTION_CALL_FOLLOW_UP';
       case Event.actionCallDecline:
         return 'com.hiennv.flutter_callkit_incoming.ACTION_CALL_DECLINE';
-      case Event.actionCallLater:
-        return 'com.hiennv.flutter_callkit_incoming.ACTION_CALL_LATER';
       case Event.actionCallEnded:
         return 'com.hiennv.flutter_callkit_incoming.ACTION_CALL_ENDED';
       case Event.actionCallTimeout:

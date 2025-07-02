@@ -34,6 +34,12 @@ import com.squareup.picasso.OkHttp3Downloader
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
 import okhttp3.OkHttpClient
+import android.view.ViewGroup.MarginLayoutParams
+import java.util.concurrent.TimeUnit
+import okhttp3.*
+import org.json.JSONObject
+import java.io.IOException
+import android.util.Log
 
 
 class CallkitNotificationManager(private val context: Context) {
@@ -52,6 +58,20 @@ class CallkitNotificationManager(private val context: Context) {
     private var notificationSmallViews: RemoteViews? = null
     private var notificationId: Int = 9696
     private var dataNotificationPermission: Map<String, Any> = HashMap()
+
+
+    interface CallActionListener {
+        fun onAcceptCall(data: Bundle)
+        fun onDeclineCall(data: Bundle)
+        fun onTimeoutCall(data: Bundle)
+    }
+    
+    private var callActionListener: CallActionListener? = null
+    
+    // Setter untuk callback
+    fun setCallActionListener(listener: CallActionListener) {
+        this.callActionListener = listener
+    }
 
     @SuppressLint("MissingPermission")
     private var targetLoadAvatarDefault = object : Target {
@@ -149,90 +169,94 @@ class CallkitNotificationManager(private val context: Context) {
         val isCustomSmallExNotification =
             data.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_CUSTOM_SMALL_EX_NOTIFICATION, false)
         if (isCustomNotification) {
-            notificationViews =
-                RemoteViews(context.packageName, R.layout.layout_custom_notification)
-            initNotificationViews(notificationViews!!, data)
+    notificationViews =
+        RemoteViews(context.packageName, R.layout.layout_custom_notification)
+    initNotificationViews(notificationViews!!, data)
 
-            if ((Build.MANUFACTURER.equals(
-                    "Samsung",
-                    ignoreCase = true
-                ) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) || isCustomSmallExNotification
-            ) {
-                notificationSmallViews =
-                    RemoteViews(context.packageName, R.layout.layout_custom_small_ex_notification)
-                initNotificationViews(notificationSmallViews!!, data)
-            } else {
-                notificationSmallViews =
-                    RemoteViews(context.packageName, R.layout.layout_custom_small_notification)
-                initNotificationViews(notificationSmallViews!!, data)
-            }
+    if ((Build.MANUFACTURER.equals(
+            "Samsung",
+            ignoreCase = true
+        ) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) || isCustomSmallExNotification
+    ) {
+        notificationSmallViews =
+            RemoteViews(context.packageName, R.layout.layout_custom_small_ex_notification)
+        initNotificationViews(notificationSmallViews!!, data)
+    } else {
+        notificationSmallViews =
+            RemoteViews(context.packageName, R.layout.layout_custom_small_notification)
+        initNotificationViews(notificationSmallViews!!, data)
+    }
 
-            notificationBuilder.setStyle(NotificationCompat.DecoratedCustomViewStyle())
-            notificationBuilder.setCustomContentView(notificationSmallViews)
-            notificationBuilder.setCustomBigContentView(notificationViews)
-            notificationBuilder.setCustomHeadsUpContentView(notificationSmallViews)
-        } else {
-            notificationBuilder.setContentText(
-                data.getString(
-                    CallkitConstants.EXTRA_CALLKIT_HANDLE,
-                    ""
-                )
+    notificationBuilder.setStyle(NotificationCompat.DecoratedCustomViewStyle())
+    notificationBuilder.setCustomContentView(notificationSmallViews)
+    notificationBuilder.setCustomBigContentView(notificationViews)
+    notificationBuilder.setCustomHeadsUpContentView(notificationSmallViews)
+} else {
+    notificationBuilder.setContentText(
+        data.getString(
+            CallkitConstants.EXTRA_CALLKIT_HANDLE,
+            ""
+        )
+    )
+    
+    // === BAGIAN YANG DIMODIFIKASI UNTUK AVATAR PLACEHOLDER ===
+    val avatarUrl = data.getString(CallkitConstants.EXTRA_CALLKIT_AVATAR, "")
+    val subtitle = data.getString(CallkitConstants.EXTRA_CALLKIT_SUBTITLE, "Unknown")
+    
+    if (avatarUrl != null && avatarUrl.isNotEmpty()) {
+        val headers =
+            data.getSerializable(CallkitConstants.EXTRA_CALLKIT_HEADERS) as HashMap<String, Any?>
+        getPicassoInstance(context, headers).load(avatarUrl)
+            .into(targetLoadAvatarDefault)
+    } else {
+        // Buat avatar placeholder dengan initial
+        val placeholderBitmap = createAvatarPlaceholder(subtitle)
+        notificationBuilder.setLargeIcon(placeholderBitmap)
+    }
+    // === AKHIR MODIFIKASI ===
+    
+    val title = data.getString(CallkitConstants.EXTRA_CALLKIT_TITLE, "")
+    val timer = data.getString(CallkitConstants.EXTRA_CALLKIT_TIMER, "")
+    val senderMessage = data.getString(CallkitConstants.EXTRA_CALLKIT_SENDERMESSAGE, "")
+    
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        val person = Person.Builder()
+            .setName(subtitle)
+            .setImportant(
+                data.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_IMPORTANT, false)
             )
-            val avatarUrl = data.getString(CallkitConstants.EXTRA_CALLKIT_AVATAR, "")
-            if (avatarUrl != null && avatarUrl.isNotEmpty()) {
-                val headers =
-                    data.getSerializable(CallkitConstants.EXTRA_CALLKIT_HEADERS) as HashMap<String, Any?>
-                getPicassoInstance(context, headers).load(avatarUrl)
-                    .into(targetLoadAvatarDefault)
-            }
-            val title = data.getString(CallkitConstants.EXTRA_CALLKIT_TITLE, "")
-            val subtitle = data.getString(CallkitConstants.EXTRA_CALLKIT_SUBTITLE, "")
-            val senderName = data.getString(CallkitConstants.EXTRA_CALLKIT_SENDERNAME, "")
-            val senderMessage = data.getString(CallkitConstants.EXTRA_CALLKIT_SENDERMESSAGE, "")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                val person = Person.Builder()
-                    .setName(subtitle)
-                    .setImportant(
-                        data.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_IMPORTANT, false)
-                    )
-                    .setBot(data.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_BOT, false))
-                    .build()
-                notificationBuilder.setStyle(
-                    NotificationCompat.CallStyle.forIncomingCall(
-                        person,
-                        getDeclinePendingIntent(notificationId, data),
-                        getAcceptPendingIntent(notificationId, data),
-                    )
-                        .setIsVideo(typeCall > 0)
-                )
-            } else {
-                notificationBuilder.setContentTitle(title)
-                notificationBuilder.setContentTitle(subtitle)
-                notificationBuilder.setContentTitle(senderName)
-                notificationBuilder.setContentTitle(senderMessage)
-                val textDecline = data.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_DECLINE, "")
-                val declineAction: NotificationCompat.Action = NotificationCompat.Action.Builder(
-                    R.drawable.ic_decline,
-                    if (TextUtils.isEmpty(textDecline)) context.getString(R.string.text_decline) else textDecline,
-                    getDeclinePendingIntent(notificationId, data)
-                ).build()
-                notificationBuilder.addAction(declineAction)
-                val textFollowUp = data.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_FOLLOW_UP, "")
-                val followUpAction: NotificationCompat.Action = NotificationCompat.Action.Builder(
-                    R.drawable.ic_follow_up,
-                    if (TextUtils.isEmpty(textFollowUp)) context.getString(R.string.text_follow_up) else textFollowUp,
-                    getAcceptPendingIntent(notificationId, data)
-                ).build()
-                notificationBuilder.addAction(followUpAction)
-                val textLater = data.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_LATER, "")
-                val laterAction: NotificationCompat.Action = NotificationCompat.Action.Builder(
-                    R.drawable.ic_later,
-                    if (TextUtils.isEmpty(textLater)) context.getString(R.string.text_later) else textLater,
-                    getAcceptPendingIntent(notificationId, data)
-                ).build()
-                notificationBuilder.addAction(laterAction)
-            }
-        }
+            .setBot(data.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_BOT, false))
+            .build()
+        notificationBuilder.setStyle(
+            NotificationCompat.CallStyle.forIncomingCall(
+                person,
+                getDeclinePendingIntent(notificationId, data),
+                getAcceptPendingIntent(notificationId, data),
+            )
+                .setIsVideo(typeCall > 0)
+        )
+    } else {
+        notificationBuilder.setContentTitle(title)
+        notificationBuilder.setContentTitle(subtitle)
+        notificationBuilder.setContentTitle(timer)
+        notificationBuilder.setContentTitle(senderMessage)
+        val textDecline = data.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_DECLINE, "")
+        val declineAction: NotificationCompat.Action = NotificationCompat.Action.Builder(
+            R.drawable.ic_decline,
+            if (TextUtils.isEmpty(textDecline)) context.getString(R.string.text_decline) else textDecline,
+            getDeclinePendingIntent(notificationId, data)
+        ).build()
+        notificationBuilder.addAction(declineAction)
+        val textFollowUp = data.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_FOLLOW_UP, "")
+        val followUpAction: NotificationCompat.Action = NotificationCompat.Action.Builder(
+            R.drawable.ic_follow_up,
+            if (TextUtils.isEmpty(textFollowUp)) context.getString(R.string.text_follow_up) else textFollowUp,
+            getAcceptPendingIntent(notificationId, data)
+        ).build()
+        notificationBuilder.addAction(followUpAction)
+        val fcmData = data.getString(CallkitConstants.EXTRA_CALLKIT_FCM_DATA, "")
+    }
+}
         val notification = notificationBuilder.build()
         notification.flags = Notification.FLAG_INSISTENT
         getNotificationManager().notify(notificationId, notification)
@@ -248,20 +272,13 @@ class CallkitNotificationManager(private val context: Context) {
             data.getString(CallkitConstants.EXTRA_CALLKIT_SUBTITLE, "")
         )
         remoteViews.setTextViewText(
-            R.id.tvSenderName,
-            data.getString(CallkitConstants.EXTRA_CALLKIT_SENDERNAME, "")
+            R.id.tvTimer,
+            data.getString(CallkitConstants.EXTRA_CALLKIT_TIMER, "")
         )
         remoteViews.setTextViewText(
             R.id.tvSenderMessage,
             data.getString(CallkitConstants.EXTRA_CALLKIT_SENDERMESSAGE, "")
         )
-        val isShowCallID = data?.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_SHOW_CALL_ID, false)
-        if (isShowCallID == true) {
-            remoteViews.setTextViewText(
-                R.id.tvNumber,
-                data.getString(CallkitConstants.EXTRA_CALLKIT_HANDLE, "")
-            )
-        }
         remoteViews.setOnClickPendingIntent(
             R.id.llDecline,
             getDeclinePendingIntent(notificationId, data)
@@ -280,23 +297,23 @@ class CallkitNotificationManager(private val context: Context) {
             R.id.tvFollowUp,
             if (TextUtils.isEmpty(textFollowUp)) context.getString(R.string.text_follow_up) else textFollowUp
         )
-        remoteViews.setOnClickPendingIntent(
-            R.id.llLater,
-            getAcceptPendingIntent(notificationId, data)
-        )
-        val textLater = data.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_LATER, "")
-        remoteViews.setTextViewText(
-            R.id.tvLater,
-            if (TextUtils.isEmpty(textLater)) context.getString(R.string.text_later) else textLater
-        )
-        val avatarUrl = data.getString(CallkitConstants.EXTRA_CALLKIT_AVATAR, "")
-        if (avatarUrl != null && avatarUrl.isNotEmpty()) {
-            val headers =
-                data.getSerializable(CallkitConstants.EXTRA_CALLKIT_HEADERS) as HashMap<String, Any?>
-            getPicassoInstance(context, headers).load(avatarUrl)
-                .transform(CircleTransform())
-                .into(targetLoadAvatarCustomize)
-        }
+        // === BAGIAN YANG DIPERBAIKI UNTUK AVATAR PLACEHOLDER ===
+    val avatarUrl = data.getString(CallkitConstants.EXTRA_CALLKIT_AVATAR, "")
+    val subtitle = data.getString(CallkitConstants.EXTRA_CALLKIT_SUBTITLE, "Unknown")
+    
+    if (avatarUrl != null && avatarUrl.isNotEmpty()) {
+        val headers =
+            data.getSerializable(CallkitConstants.EXTRA_CALLKIT_HEADERS) as HashMap<String, Any?>
+        getPicassoInstance(context, headers).load(avatarUrl)
+            .transform(CircleTransform())
+            .into(targetLoadAvatarCustomize)
+    } else {
+        // Set placeholder avatar dengan initial untuk custom notification
+        val placeholderBitmap = createAvatarPlaceholder(subtitle)
+        remoteViews.setImageViewBitmap(R.id.ivAvatar, placeholderBitmap)
+        remoteViews.setViewVisibility(R.id.ivAvatar, View.VISIBLE)
+    }
+    // === AKHIR PERBAIKAN ===
     }
 
     @SuppressLint("MissingPermission")
@@ -333,7 +350,7 @@ class CallkitNotificationManager(private val context: Context) {
             }
         }
         val textMissedCall = data.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_SUBTITLE, "")
-        val textSenderName = data.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_SENDERNAME, "")
+        val texttimer = data.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_TIMER, "")
         val textSenderMessage = data.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_SENDERMESSAGE, "")
         
         notificationBuilder.setSubText(if (TextUtils.isEmpty(textMissedCall)) context.getString(R.string.text_missed_call) else textMissedCall)
@@ -356,21 +373,13 @@ class CallkitNotificationManager(private val context: Context) {
                 data.getString(CallkitConstants.EXTRA_CALLKIT_SUBTITLE, "")
             )
             notificationViews?.setTextViewText(
-                R.id.tvSenderName,
-                data.getString(CallkitConstants.EXTRA_CALLKIT_SENDERNAME, "")
+                R.id.tvTimer,
+                data.getString(CallkitConstants.EXTRA_CALLKIT_TIMER, "")
             )
             notificationViews?.setTextViewText(
                 R.id.tvSenderMessage,
                 data.getString(CallkitConstants.EXTRA_CALLKIT_SENDERMESSAGE, "")
             )
-            val isShowCallID =
-                data?.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_SHOW_CALL_ID, false)
-            if (isShowCallID == true) {
-                notificationViews?.setTextViewText(
-                    R.id.tvNumber,
-                    data.getString(CallkitConstants.EXTRA_CALLKIT_HANDLE, "")
-                )
-            }
             notificationViews?.setOnClickPendingIntent(
                 R.id.llCallback,
                 getCallbackPendingIntent(notificationId, data)
@@ -459,6 +468,50 @@ class CallkitNotificationManager(private val context: Context) {
         }, 1000)
     }
 
+private fun createAvatarPlaceholder(name: String, size: Int = 200): Bitmap {
+    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = android.graphics.Canvas(bitmap)
+    
+    // Background circle dengan warna gray cerah
+    val paint = android.graphics.Paint().apply {
+        isAntiAlias = true
+        color = Color.parseColor("#E0E0E0") // Gray cerah
+    }
+    
+    val radius = size / 2f
+    canvas.drawCircle(radius, radius, radius, paint)
+    
+    // Text untuk initial
+    val textPaint = android.graphics.Paint().apply {
+        isAntiAlias = true
+        color = Color.parseColor("#757575") // Dark gray untuk text
+        textSize = size * 0.4f // 40% dari ukuran avatar
+        textAlign = android.graphics.Paint.Align.CENTER
+        typeface = android.graphics.Typeface.DEFAULT_BOLD
+    }
+    
+    // Ambil initial dari nama
+    val initial = getInitials(name)
+    
+    // Hitung posisi text di tengah
+    val textBounds = android.graphics.Rect()
+    textPaint.getTextBounds(initial, 0, initial.length, textBounds)
+    val textY = radius + textBounds.height() / 2f
+    
+    canvas.drawText(initial, radius, textY, textPaint)
+    
+    return bitmap
+}
+
+// 2. Tambahkan fungsi untuk mengambil initial dari nama
+private fun getInitials(name: String): String {
+    val words = name.trim().split("\\s+".toRegex())
+    return when {
+        words.isEmpty() -> "?"
+        words.size == 1 -> words[0].take(1).uppercase()
+        else -> "${words[0].take(1)}${words[1].take(1)}".uppercase()
+    }
+}
 
     fun clearIncomingNotification(data: Bundle, isAccepted: Boolean) {
         context.sendBroadcast(CallkitIncomingActivity.getIntentEnded(context, isAccepted))
@@ -712,6 +765,7 @@ class CallkitNotificationManager(private val context: Context) {
         }
     }
 
+    
 
 }
 

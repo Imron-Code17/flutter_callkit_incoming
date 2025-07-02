@@ -7,8 +7,21 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import okhttp3.OkHttpClient
+import android.view.ViewGroup.MarginLayoutParams
+import java.util.concurrent.TimeUnit
+import okhttp3.*
+import org.json.JSONObject
+import java.io.IOException
 
 class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
+         // HTTP Client
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(10, TimeUnit.SECONDS)
+        .writeTimeout(10, TimeUnit.SECONDS)
+        .build()
+
 
     companion object {
         private const val TAG = "CallkitIncomingReceiver"
@@ -44,11 +57,6 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
                 putExtra(CallkitConstants.EXTRA_CALLKIT_INCOMING_DATA, data)
             }
         
-        fun getIntentLater(context: Context, data: Bundle?) =
-            Intent(context, CallkitIncomingBroadcastReceiver::class.java).apply {
-                action = "${context.packageName}.${CallkitConstants.ACTION_CALL_LATER}"
-                putExtra(CallkitConstants.EXTRA_CALLKIT_INCOMING_DATA, data)
-            }
 
         fun getIntentEnded(context: Context, data: Bundle?) =
             Intent(context, CallkitIncomingBroadcastReceiver::class.java).apply {
@@ -84,6 +92,7 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
 
     @SuppressLint("MissingPermission")
     override fun onReceive(context: Context, intent: Intent) {
+        
         val callkitNotificationManager = CallkitNotificationManager(context)
         val action = intent.action ?: return
         val data = intent.extras?.getBundle(CallkitConstants.EXTRA_CALLKIT_INCOMING_DATA) ?: return
@@ -115,7 +124,9 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
 
             "${context.packageName}.${CallkitConstants.ACTION_CALL_FOLLOW_UP}" -> {
                 Log.d("CallActions", "#>> Follow up call clicked")
+                callFollowUpAPI(data)
                 try {
+                    stopSoundService(context)
                     sendEventFlutter(CallkitConstants.ACTION_CALL_FOLLOW_UP, data)
                     context.stopService(Intent(context, CallkitSoundPlayerService::class.java))
                     callkitNotificationManager.clearIncomingNotification(data, true)
@@ -127,20 +138,10 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
 
             "${context.packageName}.${CallkitConstants.ACTION_CALL_DECLINE}" -> {
                 Log.d("CallActions", "#>> Decline call clicked")
+                callDeclineAPI(data)
                 try {
+                    stopSoundService(context)
                     sendEventFlutter(CallkitConstants.ACTION_CALL_DECLINE, data)
-                    context.stopService(Intent(context, CallkitSoundPlayerService::class.java))
-                    callkitNotificationManager.clearIncomingNotification(data, false)
-                    removeCall(context, Data.fromBundle(data))
-                } catch (error: Exception) {
-                    Log.e(TAG, null, error)
-                }
-            }
-
-            "${context.packageName}.${CallkitConstants.ACTION_CALL_LATER}" -> {
-                Log.d("CallActions", "#>> Later call clicked")
-                try {
-                    sendEventFlutter(CallkitConstants.ACTION_CALL_LATER, data)
                     context.stopService(Intent(context, CallkitSoundPlayerService::class.java))
                     callkitNotificationManager.clearIncomingNotification(data, false)
                     removeCall(context, Data.fromBundle(data))
@@ -151,6 +152,7 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
 
             "${context.packageName}.${CallkitConstants.ACTION_CALL_ENDED}" -> {
                 try {
+                    stopSoundService(context)
                     sendEventFlutter(CallkitConstants.ACTION_CALL_ENDED, data)
                     context.stopService(Intent(context, CallkitSoundPlayerService::class.java))
                     callkitNotificationManager.clearIncomingNotification(data, false)
@@ -162,6 +164,7 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
 
             "${context.packageName}.${CallkitConstants.ACTION_CALL_TIMEOUT}" -> {
                 try {
+                    stopSoundService(context)
                     sendEventFlutter(CallkitConstants.ACTION_CALL_TIMEOUT, data)
                     context.stopService(Intent(context, CallkitSoundPlayerService::class.java))
                     if (data.getBoolean(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_SHOW, true)) {
@@ -175,6 +178,7 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
 
             "${context.packageName}.${CallkitConstants.ACTION_CALL_CALLBACK}" -> {
                 try {
+                    stopSoundService(context)
                     callkitNotificationManager.clearMissCallNotification(data)
                     sendEventFlutter(CallkitConstants.ACTION_CALL_CALLBACK, data)
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
@@ -219,7 +223,7 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
                 "count" to data.getInt(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_COUNT),
                 "title" to data.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_TITLE),
                 "subtitle" to data.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_SUBTITLE),
-                "senderName" to data.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_SENDERNAME),
+                "timer" to data.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_TIMER),
                 "senderMessage" to data.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_SENDERMESSAGE),
                 "callbackText" to data.getString(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_CALLBACK_TEXT),
                 "isShowCallback" to data.getBoolean(CallkitConstants.EXTRA_CALLKIT_MISSED_CALL_CALLBACK_SHOW),
@@ -228,7 +232,7 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
                 "id" to data.getString(CallkitConstants.EXTRA_CALLKIT_ID, ""),
                 "title" to data.getString(CallkitConstants.EXTRA_CALLKIT_TITLE, ""),
                 "subtitle" to data.getString(CallkitConstants.EXTRA_CALLKIT_SUBTITLE, ""),
-                "senderName" to data.getString(CallkitConstants.EXTRA_CALLKIT_SENDERNAME, ""),
+                "timer" to data.getString(CallkitConstants.EXTRA_CALLKIT_TIMER, ""),
                 "senderMessage" to data.getString(CallkitConstants.EXTRA_CALLKIT_SENDERMESSAGE, ""),
                 "avatar" to data.getString(CallkitConstants.EXTRA_CALLKIT_AVATAR, ""),
                 "number" to data.getString(CallkitConstants.EXTRA_CALLKIT_HANDLE, ""),
@@ -241,5 +245,120 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
                 "android" to android
         )
         FlutterCallkitIncomingPlugin.sendEvent(event, forwardData)
+    }
+
+    private fun stopSoundService(context: Context) {
+    try {
+        val stopIntent = Intent(context, CallkitSoundPlayerService::class.java)
+        context.stopService(stopIntent)
+        Log.d(TAG, "Sound service stopped")
+    } catch (error: Exception) {
+        Log.e(TAG, "Error stopping sound service", error)
+    }
+}
+
+private fun callFollowUpAPI(data: Bundle?) {
+    try {
+        val fcmDataString = data?.getString(CallkitConstants.EXTRA_CALLKIT_FCM_DATA, "")
+        if (fcmDataString.isNullOrEmpty()) {
+            Log.e("CallkitNotificationManager", "FCM data is empty for follow up")
+            return
+        }
+        val fcmData = JSONObject(fcmDataString)
+        val messageId = fcmData.optInt("message_id", 0)
+        val salesId = fcmData.optInt("sales_id", 0)
+        if (messageId == 0 || salesId == 0) {
+            Log.e("CallkitNotificationManager", "Invalid message_id or sales_id for follow up")
+            return
+        }
+        val requestBody = JSONObject().apply {
+            put("message_id", messageId)
+            put("sales_id", salesId)
+        }
+        Log.e("CallkitNotificationManager", "MS ID: $messageId - S ID: $salesId")
+        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val body = RequestBody.create(mediaType, requestBody.toString())
+        val urlFollowUp = data.getString(CallkitConstants.EXTRA_CALLKIT_URL_FOLLOW_UP, "")
+        Log.e("CallkitNotificationManager", "URL FOLLOW UP: $urlFollowUp")
+        val request = Request.Builder()
+            .url(urlFollowUp)
+            .addHeader("accept", "application/json")
+            .post(body)
+            .build()
+            
+        httpClient.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("CallkitNotificationManager", "Follow up API call failed", e)
+            }
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (response.isSuccessful) {
+                        Log.d("CallkitNotificationManager", "Follow up API call successful: ${response.body()?.string()}")
+                    } else {
+                        Log.e("CallkitNotificationManager", "Follow up API call failed with code: ${response.code()}")
+                    }
+                }
+            }
+        })
+    } catch (e: Exception) {
+        Log.e("CallkitNotificationManager", "Error calling follow up API", e)
+    }
+}
+
+    private fun callDeclineAPI(data: Bundle?) {
+        try {
+            val fcmDataString = data?.getString(CallkitConstants.EXTRA_CALLKIT_FCM_DATA, "")
+            if (fcmDataString.isNullOrEmpty()) {
+                Log.e("CallkitNotificationManager","FCM data is empty for decline")
+                return
+            }
+
+            val fcmData = JSONObject(fcmDataString)
+            val messageId = fcmData.optInt("message_id", 0)
+            val salesId = fcmData.optInt("sales_id", 0)
+
+            if (messageId == 0 || salesId == 0) {
+                Log.e("CallkitNotificationManager","Invalid message_id or sales_id for decline")
+                return
+            }
+
+            val requestBody = JSONObject().apply {
+                put("message_id", messageId)
+                put("sales_id", salesId)
+            }
+
+           Log.e("CallkitNotificationManager","MS ID: $messageId - S ID: $salesId")
+
+            val mediaType = MediaType.parse("application/json; charset=utf-8")
+            val body = RequestBody.create(mediaType, requestBody.toString())
+
+            val urlDecline = data?.getString(CallkitConstants.EXTRA_CALLKIT_URL_DECLINE, "")
+            Log.e("CallkitNotificationManager","URL DECLINE: $urlDecline")
+
+            val request = Request.Builder()
+                .url(urlDecline)
+                .post(body)
+                .addHeader("accept", "application/json")
+                .build()
+
+            httpClient.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.e("CallkitNotificationManager","Decline API call failed", e)
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    response.use {
+                        if (response.isSuccessful) {
+                            Log.d("CallkitNotificationManager","Decline API call successful: ${response.body()?.string()}")
+                        } else {
+                            Log.e("CallkitNotificationManager","Decline API call failed with code: ${response.code()}")
+                        }
+                    }
+                }
+            })
+
+        } catch (e: Exception) {
+            Log.e("CallkitNotificationManager","Error calling decline API", e)
+        }
     }
 }
