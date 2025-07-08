@@ -42,6 +42,7 @@ class CallkitIncomingActivity : Activity() {
         private const val TAG = "CallkitIncomingActivity"
         private const val ACTION_ENDED_CALL_INCOMING =
                 "com.hiennv.flutter_callkit_incoming.ACTION_ENDED_CALL_INCOMING"
+         private const val ACTION_OPEN_APP = "OPEN_APP"
 
         fun getIntent(context: Context, data: Bundle) = Intent(CallkitConstants.ACTION_CALL_INCOMING).apply {
             action = "${context.packageName}.${CallkitConstants.ACTION_CALL_INCOMING}"
@@ -62,8 +63,10 @@ class CallkitIncomingActivity : Activity() {
     inner class EndedCallkitIncomingBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             Log.d(TAG, "EndedCallkitIncomingBroadcastReceiver received")
-            if (!isFinishing) {
+            if (!isFinishing && !isCallHandled) {
                 val isAccepted = intent.getBooleanExtra("ACCEPTED", false)
+                isCallHandled = true
+                stopCountdownTimer()
                 if (isAccepted) {
                     finishDelayed()
                 } else {
@@ -103,6 +106,10 @@ class CallkitIncomingActivity : Activity() {
 
     // Wake lock
     private var wakeLock: PowerManager.WakeLock? = null
+
+    // Call handling variables
+    private var isCallHandled = false
+    private var callData: Bundle? = null
 
     @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -261,6 +268,9 @@ class CallkitIncomingActivity : Activity() {
             return
         }
 
+        // Store data for later use
+        callData = data
+
         // Configure lockscreen display
         val isShowFullLockedScreen = data.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_SHOW_FULL_LOCKED_SCREEN, true)
         if (isShowFullLockedScreen) {
@@ -304,7 +314,6 @@ class CallkitIncomingActivity : Activity() {
         val duration = data.getLong(CallkitConstants.EXTRA_CALLKIT_DURATION, 0L)
         if (duration > 0) {
             wakeLockRequest(duration)
-            finishTimeout(data, duration)
         }
 
         // Configure action buttons text
@@ -327,14 +336,76 @@ class CallkitIncomingActivity : Activity() {
                 setupCountdownTimer()
                 Log.d(TAG, "Countdown timer started with ${remainingTimeInMillis}ms remaining")
             } else {
-                // Time expired, show static timer
-                tvTimer.text = data.getString(CallkitConstants.EXTRA_CALLKIT_TIMER, "00:00")
-                Log.d(TAG, "Timer expired, showing static time")
+                // Time expired, auto-decline immediately
+                Log.d(TAG, "Timer already expired, auto-declining")
+                autoDeclineCall()
             }
         } else {
             // No duration, show static timer text
             tvTimer.text = data.getString(CallkitConstants.EXTRA_CALLKIT_TIMER, "")
         }
+    }
+
+    private fun setupCountdownTimer() {
+        isCountdownActive = true
+        countdownHandler = Handler(Looper.getMainLooper())
+        
+        countdownRunnable = object : Runnable {
+            override fun run() {
+                if (remainingTimeInMillis <= 0) {
+                    // Timer finished
+                    tvTimer.text = "00:00"
+                    isCountdownActive = false
+                    Log.d(TAG, "Countdown timer finished")
+                    
+                    // Auto-decline if no action taken
+                    if (!isCallHandled && !isFinishing) {
+                        Log.d(TAG, "Auto-declining call due to timeout")
+                        autoDeclineCall()
+                    }
+                    return
+                }
+                
+                // Update timer display
+                val minutes = TimeUnit.MILLISECONDS.toMinutes(remainingTimeInMillis)
+                val seconds = TimeUnit.MILLISECONDS.toSeconds(remainingTimeInMillis) % 60
+                val timeString = String.format("%02d:%02d", minutes, seconds)
+                tvTimer.text = timeString
+                
+                // Decrease remaining time
+                remainingTimeInMillis -= 1000
+                
+                // Schedule next update
+                if (isCountdownActive && !isFinishing) {
+                    countdownHandler?.postDelayed(this, 1000)
+                }
+            }
+        }
+        
+        // Start the countdown
+        countdownHandler?.post(countdownRunnable!!)
+    }
+
+    private fun autoDeclineCall() {
+        if (isCallHandled) return // Prevent multiple calls
+        
+        Log.d(TAG, "Auto-declining call - no user action within duration")
+        isCallHandled = true
+        stopCountdownTimer()
+        
+        // Call decline API
+        callDeclineAPI(callData)
+        
+        // Finish activity
+        finishTask()
+    }
+
+    private fun stopCountdownTimer() {
+        isCountdownActive = false
+        countdownHandler?.removeCallbacks(countdownRunnable!!)
+        countdownHandler = null
+        countdownRunnable = null
+        Log.d(TAG, "Countdown timer stopped")
     }
 
     private fun applyTextColors(textColor: String?) {
@@ -350,111 +421,111 @@ class CallkitIncomingActivity : Activity() {
         }
     }
 
-private fun loadAvatar(data: Bundle) {
-    val avatarUrl = data.getString(CallkitConstants.EXTRA_CALLKIT_AVATAR, "")
-    val subtitle = data.getString(CallkitConstants.EXTRA_CALLKIT_SUBTITLE, "")
-    
-    ivAvatar.visibility = View.VISIBLE
-    
-    if (!avatarUrl.isNullOrEmpty()) {
-        // Load avatar from URL
-        val headers = data.getSerializable(CallkitConstants.EXTRA_CALLKIT_HEADERS) as? HashMap<String, Any?> ?: hashMapOf()
+    private fun loadAvatar(data: Bundle) {
+        val avatarUrl = data.getString(CallkitConstants.EXTRA_CALLKIT_AVATAR, "")
+        val subtitle = data.getString(CallkitConstants.EXTRA_CALLKIT_SUBTITLE, "")
         
-        try {
-            getPicassoInstance(this@CallkitIncomingActivity, headers)
-                .load(avatarUrl)
-                .placeholder(R.drawable.ic_default_avatar)
-                .error(R.drawable.ic_default_avatar)
-                .into(ivAvatar)
-            Log.d(TAG, "Avatar loaded: $avatarUrl")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error loading avatar", e)
-            // Fallback to initials if loading fails
+        ivAvatar.visibility = View.VISIBLE
+        
+        if (!avatarUrl.isNullOrEmpty()) {
+            // Load avatar from URL
+            val headers = data.getSerializable(CallkitConstants.EXTRA_CALLKIT_HEADERS) as? HashMap<String, Any?> ?: hashMapOf()
+            
+            try {
+                getPicassoInstance(this@CallkitIncomingActivity, headers)
+                    .load(avatarUrl)
+                    .placeholder(R.drawable.ic_default_avatar)
+                    .error(R.drawable.ic_default_avatar)
+                    .into(ivAvatar)
+                Log.d(TAG, "Avatar loaded: $avatarUrl")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading avatar", e)
+                // Fallback to initials if loading fails
+                setAvatarWithInitials(subtitle)
+            }
+        } else {
+            // Show initials when avatar URL is empty
             setAvatarWithInitials(subtitle)
         }
-    } else {
-        // Show initials when avatar URL is empty
-        setAvatarWithInitials(subtitle)
     }
-}
 
-private fun setAvatarWithInitials(subtitle: String?) {
-    if (subtitle.isNullOrEmpty()) {
-        // Set default background if no subtitle
-        ivAvatar.setImageResource(R.drawable.ic_default_avatar)
-        return
-    }
-    
-    try {
-        // Extract initials from subtitle
-        val initials = getInitials(subtitle)
+    private fun setAvatarWithInitials(subtitle: String?) {
+        if (subtitle.isNullOrEmpty()) {
+            // Set default background if no subtitle
+            ivAvatar.setImageResource(R.drawable.ic_default_avatar)
+            return
+        }
         
-        // Create circular drawable with initials
-        val drawable = createInitialsDrawable(initials)
-        ivAvatar.setImageDrawable(drawable)
+        try {
+            // Extract initials from subtitle
+            val initials = getInitials(subtitle)
+            
+            // Create circular drawable with initials
+            val drawable = createInitialsDrawable(initials)
+            ivAvatar.setImageDrawable(drawable)
+            
+            Log.d(TAG, "Avatar set with initials: $initials")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating initials avatar", e)
+            ivAvatar.setImageResource(R.drawable.ic_default_avatar)
+        }
+    }
+
+    private fun getInitials(name: String): String {
+        val trimmedName = name.trim()
+        if (trimmedName.isEmpty()) return "?"
         
-        Log.d(TAG, "Avatar set with initials: $initials")
-    } catch (e: Exception) {
-        Log.e(TAG, "Error creating initials avatar", e)
-        ivAvatar.setImageResource(R.drawable.ic_default_avatar)
+        val words = trimmedName.split("\\s+".toRegex())
+        return when {
+            words.size >= 2 -> {
+                // Take first letter of first and second word
+                "${words[0].first().uppercaseChar()}${words[1].first().uppercaseChar()}"
+            }
+            words.size == 1 && words[0].length >= 2 -> {
+                // Take first two letters if only one word with at least 2 characters
+                "${words[0][0].uppercaseChar()}${words[0][1].uppercaseChar()}"
+            }
+            else -> {
+                // Take first letter only
+                words[0].first().uppercaseChar().toString()
+            }
+        }
     }
-}
 
-private fun getInitials(name: String): String {
-    val trimmedName = name.trim()
-    if (trimmedName.isEmpty()) return "?"
-    
-    val words = trimmedName.split("\\s+".toRegex())
-    return when {
-        words.size >= 2 -> {
-            // Take first letter of first and second word
-            "${words[0].first().uppercaseChar()}${words[1].first().uppercaseChar()}"
+    private fun createInitialsDrawable(initials: String): android.graphics.drawable.Drawable {
+        val size = 200 // Size in pixels
+        val bitmap = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+        
+        // Background color (light gray)
+        val backgroundPaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.parseColor("#E0E0E0") // Light gray
+            isAntiAlias = true
         }
-        words.size == 1 && words[0].length >= 2 -> {
-            // Take first two letters if only one word with at least 2 characters
-            "${words[0][0].uppercaseChar()}${words[0][1].uppercaseChar()}"
+        
+        // Draw circular background
+        val radius = size / 2f
+        canvas.drawCircle(radius, radius, radius, backgroundPaint)
+        
+        // Text properties
+        val textPaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.parseColor("#424242") // Dark gray text
+            textSize = size * 0.4f // 40% of avatar size
+            isAntiAlias = true
+            textAlign = android.graphics.Paint.Align.CENTER
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
         }
-        else -> {
-            // Take first letter only
-            words[0].first().uppercaseChar().toString()
-        }
+        
+        // Calculate text position to center it
+        val textBounds = android.graphics.Rect()
+        textPaint.getTextBounds(initials, 0, initials.length, textBounds)
+        val textY = radius + (textBounds.height() / 2f)
+        
+        // Draw text
+        canvas.drawText(initials, radius, textY, textPaint)
+        
+        return android.graphics.drawable.BitmapDrawable(resources, bitmap)
     }
-}
-
-private fun createInitialsDrawable(initials: String): android.graphics.drawable.Drawable {
-    val size = 200 // Size in pixels
-    val bitmap = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
-    val canvas = android.graphics.Canvas(bitmap)
-    
-    // Background color (light gray)
-    val backgroundPaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.parseColor("#E0E0E0") // Light gray
-        isAntiAlias = true
-    }
-    
-    // Draw circular background
-    val radius = size / 2f
-    canvas.drawCircle(radius, radius, radius, backgroundPaint)
-    
-    // Text properties
-    val textPaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.parseColor("#424242") // Dark gray text
-        textSize = size * 0.4f // 40% of avatar size
-        isAntiAlias = true
-        textAlign = android.graphics.Paint.Align.CENTER
-        typeface = android.graphics.Typeface.DEFAULT_BOLD
-    }
-    
-    // Calculate text position to center it
-    val textBounds = android.graphics.Rect()
-    textPaint.getTextBounds(initials, 0, initials.length, textBounds)
-    val textY = radius + (textBounds.height() / 2f)
-    
-    // Draw text
-    canvas.drawText(initials, radius, textY, textPaint)
-    
-    return android.graphics.drawable.BitmapDrawable(resources, bitmap)
-}
 
     private fun configureActionButtons(data: Bundle, textColor: String?) {
         val textFollowUp = data.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_FOLLOW_UP, "")
@@ -492,63 +563,6 @@ private fun createInitialsDrawable(initials: String): android.graphics.drawable.
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading background image", e)
             }
-        }
-    }
-
-    private fun setupCountdownTimer() {
-        isCountdownActive = true
-        countdownHandler = Handler(Looper.getMainLooper())
-        
-        countdownRunnable = object : Runnable {
-            override fun run() {
-                if (remainingTimeInMillis <= 0) {
-                    // Timer finished
-                    tvTimer.text = "00:00"
-                    isCountdownActive = false
-                    Log.d(TAG, "Countdown timer finished")
-                    return
-                }
-                
-                // Update timer display
-                val minutes = TimeUnit.MILLISECONDS.toMinutes(remainingTimeInMillis)
-                val seconds = TimeUnit.MILLISECONDS.toSeconds(remainingTimeInMillis) % 60
-                val timeString = String.format("%02d:%02d", minutes, seconds)
-                tvTimer.text = timeString
-                
-                // Decrease remaining time
-                remainingTimeInMillis -= 1000
-                
-                // Schedule next update
-                if (isCountdownActive && !isFinishing) {
-                    countdownHandler?.postDelayed(this, 1000)
-                }
-            }
-        }
-        
-        // Start the countdown
-        countdownHandler?.post(countdownRunnable!!)
-    }
-
-    private fun stopCountdownTimer() {
-        isCountdownActive = false
-        countdownHandler?.removeCallbacks(countdownRunnable!!)
-        countdownHandler = null
-        countdownRunnable = null
-        Log.d(TAG, "Countdown timer stopped")
-    }
-
-    private fun finishTimeout(data: Bundle?, duration: Long) {
-        val currentSystemTime = System.currentTimeMillis()
-        val timeStartCall = data?.getLong(CallkitNotificationManager.EXTRA_TIME_START_CALL, currentSystemTime) ?: currentSystemTime
-        val timeOut = duration - abs(currentSystemTime - timeStartCall)
-        
-        if (timeOut > 0) {
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (!isFinishing) {
-                    Log.d(TAG, "Auto-finishing due to timeout")
-                    finishTask()
-                }
-            }, timeOut)
         }
     }
 
@@ -603,27 +617,73 @@ private fun createInitialsDrawable(initials: String): android.graphics.drawable.
     }
 
     private fun onAcceptClick() {
+        if (isCallHandled) return // Prevent multiple actions
+        
         Log.d(TAG, "Call accepted")
+        isCallHandled = true
         stopCountdownTimer()
-        val data = intent.extras?.getBundle(CallkitConstants.EXTRA_CALLKIT_INCOMING_DATA)
         
         // Call API for follow up
-        callFollowUpAPI(data)
+        callFollowUpAPI(callData)
+        openAppWithRoute()
         
         dismissKeyguard()
         finishTask()
     }
 
     private fun onDeclineClick() {
+        if (isCallHandled) return // Prevent multiple actions
+        
         Log.d(TAG, "Call declined")
+        isCallHandled = true
         stopCountdownTimer()
-        val data = intent.extras?.getBundle(CallkitConstants.EXTRA_CALLKIT_INCOMING_DATA)
         
         // Call API for decline
-        callDeclineAPI(data)
+        callDeclineAPI(callData)
         
         finishTask()
     }
+
+    private fun openAppWithRoute() {
+    try {
+        // Ambil data routing dari bundle
+        val targetRoute = callData?.getString(CallkitConstants.EXTRA_CALLKIT_TARGET_ROUTE, "")
+        
+        // Buat intent untuk membuka aplikasi utama
+        val packageManager = applicationContext.packageManager
+        val packageName = applicationContext.packageName
+        
+        // Ambil launch intent dari aplikasi utama
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+        
+        if (launchIntent != null) {
+            // Set flags untuk membuka aplikasi
+            launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
+                               Intent.FLAG_ACTIVITY_CLEAR_TOP or 
+                               Intent.FLAG_ACTIVITY_SINGLE_TOP
+            
+            // Tambahkan extra data untuk routing
+            launchIntent.putExtra("FROM_CALLKIT", true)
+            launchIntent.putExtra("ACTION", ACTION_OPEN_APP)
+            
+            if (!targetRoute.isNullOrEmpty()) {
+                launchIntent.putExtra("TARGET_ROUTE", targetRoute)
+            }
+            
+
+            
+            // Start aplikasi
+            startActivity(launchIntent)
+            Log.d(TAG, "App opened with route: $targetRoute")
+            
+        } else {
+            Log.e(TAG, "Could not get launch intent for package: $packageName")
+        }
+        
+    } catch (e: Exception) {
+        Log.e(TAG, "Error opening app with route", e)
+    }
+}
 
     private fun callFollowUpAPI(data: Bundle?) {
         try {
@@ -659,8 +719,6 @@ private fun createInitialsDrawable(initials: String): android.graphics.drawable.
                 .addHeader("accept", "application/json")
                 .post(body)
                 .build()
-
-                
 
             httpClient.newCall(request).enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {

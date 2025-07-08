@@ -42,7 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
         subtitle: 'Verde Two',
         senderMessage:
             'Segera konfirmasi. Leads akan dialihkan secara otomatis dalam 30 detik',
-        duration: 30000,
+        duration: 10000,
         textFollowUp: 'Follow Up',
         textDecline: 'Decline',
         urlFollowUp: "http://110.239.86.17:8000/api/routing/followup",
@@ -54,6 +54,7 @@ class _MyHomePageState extends State<MyHomePage> {
         extra: <String, dynamic>{'userId': '1a2b3c4d'},
         headers: <String, dynamic>{'apiKey': 'Abc@123!', 'platform': 'flutter'},
         fcmData: json.encode({'message_id': 1, 'sales_id': 13}),
+        targetRoute: '/followup',
         android: const AndroidParams(
             isCustomNotification: true,
             isShowLogo: false,

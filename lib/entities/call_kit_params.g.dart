@@ -24,6 +24,7 @@ CallKitParams _$CallKitParamsFromJson(Map<String, dynamic> json) =>
       textDecline: json['textDecline'] as String?,
       urlDecline: json['urlDecline'] as String?,
       fcmData: json['fcmData'] as String?,
+      targetRoute: json['targetRoute'] as String?,
       missedCallNotification: json['missedCallNotification'] == null
           ? null
           : NotificationParams.fromJson(
@@ -56,6 +57,7 @@ Map<String, dynamic> _$CallKitParamsToJson(CallKitParams instance) =>
       'textDecline': instance.textDecline,
       'urlDecline': instance.urlDecline,
       'fcmData': instance.fcmData,
+      'targetRoute': instance.targetRoute,
       'missedCallNotification': instance.missedCallNotification?.toJson(),
       'extra': instance.extra,
       'headers': instance.headers,

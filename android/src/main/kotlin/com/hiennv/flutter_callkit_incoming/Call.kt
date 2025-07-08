@@ -41,6 +41,8 @@ data class Data(val args: Map<String, Any?>) {
     var urlDecline: String = (args["urlDecline"] as? String) ?: ""
     @JsonProperty("fcmData")
     var fcmData: String = (args["fcmData"] as? String) ?: ""
+    @JsonProperty("targetRoute")
+    var targetRoute: String = (args["targetRoute"] as? String) ?: ""
     @JsonProperty("extra")
     var extra: HashMap<String, Any?> =
         (args["extra"] ?: HashMap<String, Any?>()) as HashMap<String, Any?>
@@ -183,6 +185,8 @@ data class Data(val args: Map<String, Any?>) {
         bundle.putString(CallkitConstants.EXTRA_CALLKIT_TEXT_DECLINE, textDecline)
         bundle.putString(CallkitConstants.EXTRA_CALLKIT_URL_DECLINE, urlDecline)
         bundle.putString(CallkitConstants.EXTRA_CALLKIT_FCM_DATA, fcmData)
+        bundle.putString(CallkitConstants.EXTRA_CALLKIT_TARGET_ROUTE, targetRoute)
+
 
         missedNotificationId?.let {
             bundle.putInt(

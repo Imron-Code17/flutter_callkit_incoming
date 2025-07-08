@@ -26,6 +26,7 @@ class CallKitParams {
     this.textDecline,
     this.urlDecline,
     this.fcmData,
+    this.targetRoute,
     this.missedCallNotification,
     this.extra,
     this.headers,
@@ -49,6 +50,7 @@ class CallKitParams {
   final String? textDecline;
   final String? urlDecline;
   final String? fcmData;
+  final String? targetRoute;
   final NotificationParams? missedCallNotification;
   final Map<String, dynamic>? extra;
   final Map<String, dynamic>? headers;
