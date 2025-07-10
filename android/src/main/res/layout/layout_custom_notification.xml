@@ -156,7 +156,7 @@
               android:textColor="@color/action_text"
               android:textSize="14sp"
               android:fontFamily="@font/dm_sans"
-              android:fontWeight="500">
+              android:fontWeight="500"/>
 </LinearLayout>
 
 
