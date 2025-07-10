@@ -1,10 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_callkit_incoming/entities/android_params.dart';
-import 'package:flutter_callkit_incoming/entities/call_event.dart';
 import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:flutter_callkit_incoming/entities/notification_params.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
@@ -39,7 +36,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Future<void> showCallkitIncoming(String uuid) async {
-    StreamSubscription<CallEvent?>? _eventSubscription;
     final params = CallKitParams(
         id: uuid,
         title: 'Incoming Lead',
@@ -71,12 +67,6 @@ class _MyHomePageState extends State<MyHomePage> {
             isShowFullLockedScreen: true));
     Future.delayed(const Duration(seconds: 3), () async {
       await FlutterCallkitIncoming.showCallkitIncoming(params);
-      _eventSubscription =
-          FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
-        if (event != null) {
-          log('#>> EVENTNYA : ${event.event.name}');
-        }
-      });
     });
   }
 
