@@ -644,6 +644,23 @@ class CallkitIncomingActivity : Activity() {
         finishTask()
     }
 
+     fun saveCallAcceptStatus(context: Context) {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putBoolean(ACCEPT_STATUS_KEY, true).apply()
+            Log.d(TAG, "Call accept status saved: true")
+        }
+
+        fun getCallAcceptStatus(context: Context): Boolean {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            return prefs.getBoolean(ACCEPT_STATUS_KEY, false)
+        }
+
+        fun removeCallAcceptStatus(context: Context) {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            prefs.edit().remove(ACCEPT_STATUS_KEY).apply()
+            Log.d(TAG, "Call accept status removed")
+        }
+
     private fun openAppWithRoute() {
     try {
         // Ambil data routing dari bundle
